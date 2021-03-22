@@ -94,6 +94,7 @@ const Cart = (): JSX.Element => {
                     <button
                       type="button"
                       data-testid="increment-product"
+                      disabled={product.amount > 5}
                       onClick={() => handleProductIncrement(product)}
                     >
                       <MdAddCircleOutline size={20} />
