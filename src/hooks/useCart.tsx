@@ -23,20 +23,53 @@ const CartContext = createContext<CartContextData>({} as CartContextData);
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const [cart, setCart] = useState<Product[]>(() => {
-    // const storagedCart = Buscar dados do localStorage
+    const storagedCart = localStorage.getItem('@RocketShoes:cart');
 
-    // if (storagedCart) {
-    //   return JSON.parse(storagedCart);
-    // }
+    if (storagedCart) {
+      return JSON.parse(storagedCart);
+    }
 
     return [];
   });
 
   const addProduct = async (productId: number) => {
     try {
-      // TODO
+
+      const productInCard = cart.find(item => item.id === productId);
+      console.log(productInCard);
+      const { data: stock } = await api.get(`/stock/${productId}`);
+
+      if (productInCard) {
+        if (stock.amount >= productInCard.amount) {
+
+          const updateCart = cart.map(product => product.id === productId
+            ? {
+              ...product,
+              amount: product.amount + 1
+            }
+            : product
+          )
+
+          setCart(updateCart);
+          localStorage.setItem('@RocketShoes:cart', JSON.stringify(updateCart));
+
+        } else toast.error('Quantidade solicitada fora de estoque');
+      } else {
+
+        const { data: product } = await api.get<Product>(`/products/${productId}`);
+
+        if (stock.amount > 0) {
+          setCart([...cart, { ...product, amount: 1 }]);
+          localStorage.setItem('@RocketShoes:cart', JSON.stringify(
+            [...cart, { ...product, amount: 1 }]
+          ));
+
+          return;
+        }
+      }
+
     } catch {
-      // TODO
+      toast.error('Erro na adição do produto');
     }
   };
 
@@ -44,7 +77,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     try {
       // TODO
     } catch {
-      // TODO
+      toast.error('Erro na remoção do produto');
     }
   };
 
@@ -54,8 +87,11 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   }: UpdateProductAmount) => {
     try {
       // TODO
+      console.log(productId, amount);
+
     } catch {
       // TODO
+      toast.error('Erro na alteração de quantidade do produto');
     }
   };
 
